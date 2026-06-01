@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Orders-Api/Orders-Api.csproj" />
+    <Project Path="src/Stocks-Api/Stocks-Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Orders-Api-Tests/Orders-Api-Tests.csproj" />
+    <Project Path="tests/Stocks-Api-Tests/Stocks-Api-Tests.csproj" />
+  </Folder>
+  <Project Path="azure-service-bus-learn.AppHost/azure-service-bus-learn.AppHost.csproj" />
+  <Project Path="azure-service-bus-learn.ServiceDefaults/azure-service-bus-learn.ServiceDefaults.csproj" />
+</Solution>

@@ -1,0 +1,5 @@
+{
+  "appHost": {
+    "path": "azure-service-bus-learn.AppHost/azure-service-bus-learn.AppHost.csproj"
+  }
+}
