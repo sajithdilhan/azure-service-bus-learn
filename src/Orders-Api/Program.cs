@@ -1,4 +1,8 @@
 using Scalar.AspNetCore;
+using Orders.Api.Data;
+using Orders.Api.Interfaces;
+using Orders.Api.Repositories;
+using Orders.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +13,9 @@ builder.AddServiceDefaults();
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSingleton<InMemoryOrdersDatabase>();
+builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 var app = builder.Build();
 
@@ -18,7 +25,7 @@ app.MapDefaultEndpoints();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.MapScalarApiReference(options => options.DarkMode = true);
 }
 
 app.UseHttpsRedirection();

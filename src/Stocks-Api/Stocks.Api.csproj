@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>Orders_Api</RootNamespace>
+    <RootNamespace>Stocks_Api</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,10 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\azure-service-bus-learn.ServiceDefaults\azure-service-bus-learn.ServiceDefaults.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
+    <ProjectReference Include="..\Shared.Contracts\Shared.csproj" />
   </ItemGroup>
 
 </Project>
