@@ -8,4 +8,5 @@ public interface IOrderService
     Task<IReadOnlyCollection<Order>> GetOrdersAsync();
     Task<Order?> GetOrderByIdAsync(Guid id);
     Task<Order> CreateOrderAsync(CreateOrderRequest request);
+    Task UpdateOrderAsync(Order order);
 }

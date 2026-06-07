@@ -26,4 +26,15 @@ public sealed class OrderRepository(InMemoryOrdersDatabase database) : IOrderRep
 
         return await Task.FromResult(order);
     }
+
+    public async Task UpdateOrderAsync(Order order)
+    {
+        if (!database.Orders.ContainsKey(order.Id))
+        {
+            throw new KeyNotFoundException($"Order with ID {order.Id} not found.");
+        }
+        order.UpdatedAt = DateTime.UtcNow;
+        database.Orders[order.Id] = order;
+        await Task.CompletedTask;
+    }
 }

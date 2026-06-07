@@ -14,6 +14,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IPaymentService, PaymentsService>();
 
+builder.AddAzureServiceBusClient("messaging");
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();

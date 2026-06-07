@@ -27,6 +27,9 @@ builder.Services.AddHttpClient<IStocksClient, StocksClient>(client =>
     client.BaseAddress = new Uri(baseAddress);
 });
 
+builder.AddAzureServiceBusClient("messaging");
+builder.Services.AddHostedService<PaymentConsumerService>();
+
 var app = builder.Build();
 
 app.MapDefaultEndpoints();

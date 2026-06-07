@@ -51,4 +51,9 @@ public sealed class OrderService(IOrderRepository orderRepository, IStocksClient
 
         return await orderRepository.CreateOrderAsync(order);
     }
+
+    public async Task UpdateOrderAsync(Order order)
+    {
+        await orderRepository.UpdateOrderAsync(order);
+    }
 }
