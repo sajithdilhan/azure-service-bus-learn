@@ -9,8 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Orders-Api\Orders.Api.csproj" />
-    <ProjectReference Include="..\src\Stocks-Api\Stocks.Api.csproj" />
+    <ProjectReference Include="..\src\Orders.Api\Orders.Api.csproj" />
+    <ProjectReference Include="..\src\Payments.Api\Payments.Api.csproj" />
+    <ProjectReference Include="..\src\Stocks.Api\Stocks.Api.csproj" />
   </ItemGroup>
 
 </Project>

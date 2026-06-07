@@ -1,9 +1,9 @@
-using System.Text.Json.Serialization;
-using Scalar.AspNetCore;
 using Orders.Api.Data;
 using Orders.Api.Interfaces;
 using Orders.Api.Repositories;
 using Orders.Api.Services;
+using Scalar.AspNetCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
