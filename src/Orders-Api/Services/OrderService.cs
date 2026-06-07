@@ -1,3 +1,4 @@
+using Orders.Api.Exceptions;
 using Orders.Api.Interfaces;
 using Shared.Entities;
 using Shared.Enums;
@@ -5,20 +6,32 @@ using Shared.Requests;
 
 namespace Orders.Api.Services;
 
-public sealed class OrderService(IOrderRepository orderRepository) : IOrderService
+public sealed class OrderService(IOrderRepository orderRepository, IStocksClient stocksClient) : IOrderService
 {
-    public Task<IReadOnlyCollection<Order>> GetOrdersAsync()
+    public async Task<IReadOnlyCollection<Order>> GetOrdersAsync()
     {
-        return orderRepository.GetOrdersAsync();
+        return await orderRepository.GetOrdersAsync();
     }
 
-    public Task<Order?> GetOrderByIdAsync(Guid id)
+    public async Task<Order?> GetOrderByIdAsync(Guid id)
     {
-        return orderRepository.GetOrderByIdAsync(id);
+        return await orderRepository.GetOrderByIdAsync(id);
     }
 
-    public Task<Order> CreateOrderAsync(CreateOrderRequest request)
+    public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
     {
+        var reservationItems = request.OrderLines.Select(line => new ReservationItem
+        {
+            ProductId = line.ProductId,
+            Quantity = line.Quantity
+        }).ToList();
+
+        var stocksReserved = await stocksClient.ReserveStocksAsync(reservationItems);
+        if (!stocksReserved)
+        {
+            throw new StockReservationFailedException();
+        }
+
         var order = new Order
         {
             CustomerId = request.CustomerId,
@@ -36,6 +49,6 @@ public sealed class OrderService(IOrderRepository orderRepository) : IOrderServi
             }).ToList()
         };
 
-        return orderRepository.CreateOrderAsync(order);
+        return await orderRepository.CreateOrderAsync(order);
     }
 }

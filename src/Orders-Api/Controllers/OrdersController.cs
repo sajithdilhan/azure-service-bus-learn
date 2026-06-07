@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Orders.Api.Exceptions;
 using Orders.Api.Interfaces;
+using Shared.Mapping;
 using Shared.Requests;
 
 namespace Orders.Api.Controllers;
@@ -13,7 +15,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     public async Task<IActionResult> GetOrders()
     {
         var orders = await orderService.GetOrdersAsync();
-        return Ok(orders);
+        return Ok(orders.Select(order => order.ToResponse()));
     }
 
     [HttpGet("{id:guid}")]
@@ -27,7 +29,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             return NotFound();
         }
 
-        return Ok(order);
+        return Ok(order.ToResponse());
     }
 
     [HttpPost]
@@ -40,7 +42,14 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             return BadRequest("At least one order line is required.");
         }
 
-        var order = await orderService.CreateOrderAsync(request);
-        return CreatedAtAction(nameof(GetOrderById), new { id = order.Id }, order);
+        try
+        {
+            var order = await orderService.CreateOrderAsync(request);
+            return CreatedAtAction(nameof(GetOrderById), new { id = order.Id }, order.ToResponse());
+        }
+        catch (StockReservationFailedException exception)
+        {
+            return Conflict(exception.Message);
+        }
     }
 }

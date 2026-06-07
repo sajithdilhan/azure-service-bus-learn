@@ -10,4 +10,5 @@ public interface IStocksService
     Task<Stock> CreateStockAsync(CreateStockRequest request);
     Task<Stock?> UpdateStockQuantityAsync(string productId, UpdateStockRequest request);
     Task<bool> HasAvailableStockAsync(string productId, int quantity);
+    Task<bool> ReserveStocksAsync(IEnumerable<ReservationItem> reservationItems);
 }

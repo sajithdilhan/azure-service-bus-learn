@@ -6,24 +6,24 @@ namespace Orders.Api.Repositories;
 
 public sealed class OrderRepository(InMemoryOrdersDatabase database) : IOrderRepository
 {
-    public Task<IReadOnlyCollection<Order>> GetOrdersAsync()
+    public async Task<IReadOnlyCollection<Order>> GetOrdersAsync()
     {
-        return Task.FromResult<IReadOnlyCollection<Order>>(
+        return await Task.FromResult<IReadOnlyCollection<Order>>(
             database.Orders.Values.OrderByDescending(order => order.CreatedAt).ToList());
     }
 
-    public Task<Order?> GetOrderByIdAsync(Guid id)
+    public async Task<Order?> GetOrderByIdAsync(Guid id)
     {
         database.Orders.TryGetValue(id, out var order);
-        return Task.FromResult(order);
+        return await Task.FromResult(order);
     }
 
-    public Task<Order> CreateOrderAsync(Order order)
+    public async Task<Order> CreateOrderAsync(Order order)
     {
         order.CreatedAt = DateTime.UtcNow;
         order.UpdatedAt = order.CreatedAt;
         database.Orders[order.Id] = order;
 
-        return Task.FromResult(order);
+        return await Task.FromResult(order);
     }
 }

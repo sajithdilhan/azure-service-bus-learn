@@ -1,4 +1,5 @@
 using Shared.Entities;
+using Shared.Requests;
 using Stocks.Api.Data;
 using Stocks.Api.Interfaces;
 
@@ -40,5 +41,43 @@ public sealed class StocksRepository(InMemoryStocksDatabase database) : IStocksR
         stock.LastRestockedAt = stock.UpdatedAt;
 
         return Task.FromResult<Stock?>(stock);
+    }
+
+    public Task<bool> ReserveStocksAsync(IEnumerable<ReservationItem> reservationItems)
+    {
+        var requestedItems = reservationItems
+            .GroupBy(item => item.ProductId, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new ReservationItem
+            {
+                ProductId = group.Key,
+                Quantity = group.Sum(item => item.Quantity)
+            })
+            .ToList();
+
+        lock (database.SyncRoot)
+        {
+            foreach (var item in requestedItems)
+            {
+                if (!database.Stocks.TryGetValue(item.ProductId, out var stock))
+                {
+                    return Task.FromResult(false);
+                }
+
+                if (stock.QuantityAvailable < item.Quantity)
+                {
+                    return Task.FromResult(false);
+                }
+            }
+
+            foreach (var item in requestedItems)
+            {
+                var stock = database.Stocks[item.ProductId];
+                stock.QuantityAvailable -= item.Quantity;
+                stock.QuantityReserved += item.Quantity;
+                stock.UpdatedAt = DateTime.UtcNow;
+            }
+        }
+
+        return Task.FromResult(true);
     }
 }

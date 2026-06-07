@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Scalar.AspNetCore;
 using Orders.Api.Data;
 using Orders.Api.Interfaces;
@@ -10,12 +11,21 @@ builder.AddServiceDefaults();
 
 // Add services to the container.
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSingleton<InMemoryOrdersDatabase>();
 builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddHttpClient<IStocksClient, StocksClient>(client =>
+{
+    var baseAddress = builder.Configuration["Services:StocksApi:BaseAddress"] ?? "http://localhost:5163";
+    client.BaseAddress = new Uri(baseAddress);
+});
 
 var app = builder.Build();
 

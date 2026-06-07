@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using Shared.Mapping;
 using Shared.Requests;
+using Shared.Responses;
 using Stocks.Api.Interfaces;
 
 namespace Stocks.Api.Controllers;
@@ -13,7 +15,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
     public async Task<IActionResult> GetStocks()
     {
         var stocks = await stocksService.GetStocksAsync();
-        return Ok(stocks);
+        return Ok(stocks.Select(stock => stock.ToResponse()));
     }
 
     [HttpGet("{productId}")]
@@ -27,7 +29,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
             return NotFound();
         }
 
-        return Ok(stock);
+        return Ok(stock.ToResponse());
     }
 
     [HttpPost]
@@ -41,7 +43,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
         }
 
         var stock = await stocksService.CreateStockAsync(request);
-        return CreatedAtAction(nameof(GetStockByProductId), new { productId = stock.ProductId }, stock);
+        return CreatedAtAction(nameof(GetStockByProductId), new { productId = stock.ProductId }, stock.ToResponse());
     }
 
     [HttpPut("{productId}/quantity")]
@@ -55,6 +57,41 @@ public class StocksController(IStocksService stocksService) : ControllerBase
             return NotFound();
         }
 
-        return Ok(stock);
+        return Ok(stock.ToResponse());
+    }
+
+    [HttpPost("reservations")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> Reservations(IEnumerable<ReservationItem> reservationItems)
+    {
+        var items = reservationItems?.ToList();
+        if (items == null || items.Count == 0)
+        {
+            return BadRequest("At least one reservation item is required.");
+        }
+
+        if (items.Any(item => string.IsNullOrWhiteSpace(item.ProductId) || item.Quantity <= 0))
+        {
+            return BadRequest("Each reservation item requires a product id and a quantity greater than zero.");
+        }
+
+        var success = await stocksService.ReserveStocksAsync(items);
+
+        if (!success)
+        {
+            return Conflict(new StockReservationResponse
+            {
+                Success = false,
+                Message = "One or more reservations could not be processed."
+            });
+        }
+
+        return Ok(new StockReservationResponse
+        {
+            Success = true,
+            Message = "Stocks reserved successfully."
+        });
     }
 }

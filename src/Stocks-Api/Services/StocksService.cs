@@ -36,6 +36,11 @@ public sealed class StocksService(IStocksRepository stocksRepository) : IStocksS
     public async Task<bool> HasAvailableStockAsync(string productId, int quantity)
     {
         var stock = await stocksRepository.GetStockByProductIdAsync(productId);
-        return stock is not null && stock.QuantityAvailable - stock.QuantityReserved >= quantity;
+        return stock is not null && stock.QuantityAvailable >= quantity;
+    }
+
+    public Task<bool> ReserveStocksAsync(IEnumerable<ReservationItem> reservationItems)
+    {
+        return stocksRepository.ReserveStocksAsync(reservationItems);
     }
 }
