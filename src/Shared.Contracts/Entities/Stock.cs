@@ -1,5 +1,8 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Shared.Entities;
 
+[Table("stocks", Schema = "stocks")]
 public sealed class Stock : BaseEntity
 {
     public string ProductId { get; set; } = string.Empty;

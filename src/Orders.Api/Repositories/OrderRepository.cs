@@ -1,40 +1,47 @@
+using Microsoft.EntityFrameworkCore;
 using Orders.Api.Data;
 using Orders.Api.Interfaces;
 using Shared.Entities;
 
 namespace Orders.Api.Repositories;
 
-public sealed class OrderRepository(InMemoryOrdersDatabase database) : IOrderRepository
+public sealed class OrderRepository(OrderDbContext database) : IOrderRepository
 {
     public async Task<IReadOnlyCollection<Order>> GetOrdersAsync()
     {
-        return await Task.FromResult<IReadOnlyCollection<Order>>(
-            database.Orders.Values.OrderByDescending(order => order.CreatedAt).ToList());
+        return await database.Orders
+            .AsNoTracking()
+            .Include(order => order.OrderLines)
+            .OrderByDescending(order => order.CreatedAt)
+            .ToListAsync();
     }
 
     public async Task<Order?> GetOrderByIdAsync(Guid id)
     {
-        database.Orders.TryGetValue(id, out var order);
-        return await Task.FromResult(order);
+        return await database.Orders
+            .AsNoTracking()
+            .Include(order => order.OrderLines)
+            .FirstOrDefaultAsync(o => o.Id == id);
     }
 
     public async Task<Order> CreateOrderAsync(Order order)
     {
         order.CreatedAt = DateTime.UtcNow;
         order.UpdatedAt = order.CreatedAt;
-        database.Orders[order.Id] = order;
+        database.Orders.Add(order);
+        await database.SaveChangesAsync();
 
-        return await Task.FromResult(order);
+        return order;
     }
 
     public async Task UpdateOrderAsync(Order order)
     {
-        if (!database.Orders.ContainsKey(order.Id))
+        if (!await database.Orders.AnyAsync(o => o.Id == order.Id))
         {
             throw new KeyNotFoundException($"Order with ID {order.Id} not found.");
         }
         order.UpdatedAt = DateTime.UtcNow;
-        database.Orders[order.Id] = order;
-        await Task.CompletedTask;
+        database.Orders.Update(order);
+        await database.SaveChangesAsync();
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Shared.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Shared.Entities;
 
+[Table("orders", Schema = "orders")]
 public sealed class Order : BaseEntity
 {
     public string OrderNumber { get; private set; } = string.Empty;

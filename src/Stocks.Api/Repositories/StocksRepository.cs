@@ -2,48 +2,51 @@ using Shared.Entities;
 using Shared.Requests;
 using Stocks.Api.Data;
 using Stocks.Api.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Stocks.Api.Repositories;
 
-public sealed class StocksRepository(InMemoryStocksDatabase database) : IStocksRepository
+public sealed class StocksRepository(StocksDbContext database) : IStocksRepository
 {
-    public Task<IReadOnlyCollection<Stock>> GetStocksAsync()
+    public async Task<IReadOnlyCollection<Stock>> GetStocksAsync()
     {
-        return Task.FromResult<IReadOnlyCollection<Stock>>(
-            database.Stocks.Values.OrderBy(stock => stock.ProductName).ToList());
+        return await database.Stocks.OrderBy(stock => stock.ProductName).ToListAsync();
     }
 
-    public Task<Stock?> GetStockByProductIdAsync(string productId)
+    public async Task<Stock?> GetStockByProductIdAsync(string productId)
     {
-        database.Stocks.TryGetValue(productId, out var stock);
-        return Task.FromResult(stock);
+        return await database.Stocks.FirstOrDefaultAsync(s => s.ProductId == productId);
     }
 
-    public Task<Stock> CreateStockAsync(Stock stock)
+    public async Task<Stock> CreateStockAsync(Stock stock)
     {
         stock.CreatedAt = DateTime.UtcNow;
         stock.UpdatedAt = stock.CreatedAt;
         stock.LastRestockedAt = stock.CreatedAt;
-        database.Stocks[stock.ProductId] = stock;
+        database.Stocks.Add(stock);
+        await database.SaveChangesAsync();
 
-        return Task.FromResult(stock);
+        return stock;
     }
 
-    public Task<Stock?> UpdateStockQuantityAsync(string productId, int quantityAvailable)
+    public async Task<Stock?> UpdateStockQuantityAsync(string productId, int quantityAvailable)
     {
-        if (!database.Stocks.TryGetValue(productId, out var stock))
+        var stock = await database.Stocks.FirstOrDefaultAsync(s => s.ProductId == productId);
+        if (stock == null)
         {
-            return Task.FromResult<Stock?>(null);
+            return null;
         }
 
         stock.QuantityAvailable = quantityAvailable;
         stock.UpdatedAt = DateTime.UtcNow;
         stock.LastRestockedAt = stock.UpdatedAt;
 
-        return Task.FromResult<Stock?>(stock);
+        await database.SaveChangesAsync();
+
+        return stock;
     }
 
-    public Task<bool> ReserveStocksAsync(IEnumerable<ReservationItem> reservationItems)
+    public async Task<bool> ReserveStocksAsync(IEnumerable<ReservationItem> reservationItems)
     {
         var requestedItems = reservationItems
             .GroupBy(item => item.ProductId, StringComparer.OrdinalIgnoreCase)
@@ -54,30 +57,6 @@ public sealed class StocksRepository(InMemoryStocksDatabase database) : IStocksR
             })
             .ToList();
 
-        lock (database.SyncRoot)
-        {
-            foreach (var item in requestedItems)
-            {
-                if (!database.Stocks.TryGetValue(item.ProductId, out var stock))
-                {
-                    return Task.FromResult(false);
-                }
-
-                if (stock.QuantityAvailable < item.Quantity)
-                {
-                    return Task.FromResult(false);
-                }
-            }
-
-            foreach (var item in requestedItems)
-            {
-                var stock = database.Stocks[item.ProductId];
-                stock.QuantityAvailable -= item.Quantity;
-                stock.QuantityReserved += item.Quantity;
-                stock.UpdatedAt = DateTime.UtcNow;
-            }
-        }
-
-        return Task.FromResult(true);
+        return await Task.FromResult(true);
     }
 }

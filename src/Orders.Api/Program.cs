@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Orders.Api.Data;
 using Orders.Api.Interfaces;
 using Orders.Api.Repositories;
@@ -18,8 +19,8 @@ builder.Services.AddControllers()
     });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-builder.Services.AddSingleton<InMemoryOrdersDatabase>();
-builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
+
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddHttpClient<IStocksClient, StocksClient>(client =>
 {
@@ -29,6 +30,7 @@ builder.Services.AddHttpClient<IStocksClient, StocksClient>(client =>
 
 builder.AddAzureServiceBusClient("messaging");
 builder.Services.AddHostedService<PaymentConsumerService>();
+builder.Services.AddDbContext<OrderDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
