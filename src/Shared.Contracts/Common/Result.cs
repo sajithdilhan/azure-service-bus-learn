@@ -17,4 +17,4 @@ public class Result<T>
     public static Result<T> Failure(Error error) => new(false, default, error);
 }
 
-public record Error(int Code, string Message);
+public record Error(int Status, string Details);

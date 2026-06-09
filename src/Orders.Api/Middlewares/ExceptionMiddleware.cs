@@ -51,7 +51,6 @@ public class ExceptionMiddleware
 
         var problem = new ApiProblemDetails
         {
-            Title = "Unexpected error!",
             Status = (int)statusCode,
             Detail = message,
             Instance = context.Request.Path

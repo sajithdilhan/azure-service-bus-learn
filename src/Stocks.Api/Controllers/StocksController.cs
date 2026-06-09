@@ -15,7 +15,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
         var result = await stocksService.GetStocksAsync();
         if (!result.IsSuccess)
         {
-            return StatusCode(result.Error?.Code ?? StatusCodes.Status404NotFound, result.Error);
+            return StatusCode(result.Error?.Status ?? StatusCodes.Status404NotFound, result.Error);
         }
 
         return Ok(result);
@@ -29,7 +29,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
         var result = await stocksService.GetStockByProductIdAsync(productId);
         if (!result.IsSuccess)
         {
-            return StatusCode(result.Error?.Code ?? StatusCodes.Status404NotFound, result.Error);
+            return StatusCode(result.Error?.Status ?? StatusCodes.Status404NotFound, result.Error);
         }
 
         return Ok(result);
@@ -62,7 +62,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
         var result = await stocksService.UpdateStockQuantityAsync(productId, request);
         if (!result.IsSuccess)
         {
-            return StatusCode(result.Error?.Code ?? StatusCodes.Status404NotFound, result.Error);
+            return StatusCode(result.Error?.Status ?? StatusCodes.Status404NotFound, result.Error);
         }
 
         return Ok(result);
@@ -89,7 +89,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
 
         if (!result.IsSuccess)
         {
-            return StatusCode(result.Error?.Code ?? StatusCodes.Status409Conflict, result.Error);
+            return StatusCode(result.Error?.Status ?? StatusCodes.Status409Conflict, result.Error);
         }
 
         return Ok(result.Value);

@@ -16,7 +16,7 @@ public class PaymentsController(IPaymentService paymentService) : ControllerBase
         var result = await paymentService.ProcessPaymentAsync(request);
         if (!result.IsSuccess)
         {
-            return StatusCode(result.Error?.Code ?? StatusCodes.Status400BadRequest, result.Error);
+            return StatusCode(result.Error?.Status ?? StatusCodes.Status400BadRequest, result.Error);
         }
 
         return Accepted(result.Value);

@@ -6,5 +6,4 @@ public enum PaymentMethods
     DebitCard,
     PayPal,
     BankTransfer,
-    Unknown
 }

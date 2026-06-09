@@ -1,4 +1,5 @@
 using Azure.Messaging.ServiceBus;
+using FluentValidation;
 using Payments.Api.Interfaces;
 using Shared.Common;
 using Shared.Enums;
@@ -15,24 +16,22 @@ public class PaymentsService(
     ILogger<PaymentsService> logger,
     ServiceBusClient client,
     IConfiguration configuration,
-    IPaymentRepository paymentRepository) : IPaymentService
+    IPaymentRepository paymentRepository,
+    IValidator<CreatePaymentRequest> validator) : IPaymentService
 {
     public async Task<Result<PaymentResponse>> ProcessPaymentAsync(CreatePaymentRequest request)
     {
         logger.LogInformation("Processing payment for order {OrderId}", request.OrderId);
 
-        if (request.PaymentStatus != nameof(PaymentStatus.Confirmed))
+        var validationResult = await validator.ValidateAsync(request);
+        if (!validationResult.IsValid)
         {
-            logger.LogWarning("Invalid payment status for order {OrderId}: {Status}", request.OrderId, request.PaymentStatus);
-            return Result<PaymentResponse>.Failure(new Error((int)HttpStatusCode.BadRequest, "Invalid payment status."));
+            var errorMessages = validationResult.Errors.Select(e => e.ErrorMessage);
+            logger.LogWarning("Invalid payment request for order {OrderId}. Errors: {ErrorMessages}", request.OrderId, string.Join(", ", errorMessages));
+            return Result<PaymentResponse>.Failure(new Error((int)HttpStatusCode.BadRequest, string.Join(", ", errorMessages)));
         }
 
         var payment = request.ToEntity();
-        if (payment.PaymentMethod == PaymentMethods.Unknown)
-        {
-            logger.LogWarning("Invalid payment method for order {OrderId}: {PaymentMethod}", request.OrderId, request.PaymentMethod);
-            return Result<PaymentResponse>.Failure(new Error((int)HttpStatusCode.BadRequest, "Invalid payment method."));
-        }
 
         payment = await paymentRepository.CreatePaymentAsync(payment);
 

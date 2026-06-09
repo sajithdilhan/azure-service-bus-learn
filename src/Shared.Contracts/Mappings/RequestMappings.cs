@@ -76,7 +76,7 @@ public static class RequestMappings
         {
             OrderId = request.OrderId,
             Amount = request.TotalAmount,
-            PaymentMethod = Enum.TryParse(request.PaymentMethod, out PaymentMethods paymentMethod) ? paymentMethod : PaymentMethods.Unknown,
+            PaymentMethod = Enum.Parse<PaymentMethods>(request.PaymentMethod),
             Status = Enum.TryParse(request.PaymentStatus, out PaymentStatus paymentStatus) ? paymentStatus : PaymentStatus.Failed,
             TransactionId = request.TransactionId,
             Reference = request.Reference
