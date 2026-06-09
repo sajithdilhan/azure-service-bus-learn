@@ -1,14 +1,15 @@
-using Shared.Entities;
+using Shared.Common;
 using Shared.Requests;
+using Shared.Responses;
 
 namespace Stocks.Api.Interfaces;
 
 public interface IStocksService
 {
-    Task<IReadOnlyCollection<Stock>> GetStocksAsync();
-    Task<Stock?> GetStockByProductIdAsync(string productId);
-    Task<Stock> CreateStockAsync(CreateStockRequest request);
-    Task<Stock?> UpdateStockQuantityAsync(string productId, UpdateStockRequest request);
-    Task<bool> HasAvailableStockAsync(string productId, int quantity);
-    Task<bool> ReserveStocksAsync(IEnumerable<ReservationItem> reservationItems);
+    Task<Result<IReadOnlyCollection<StockResponse>>> GetStocksAsync();
+    Task<Result<StockResponse>> GetStockByProductIdAsync(string productId);
+    Task<Result<StockResponse>> CreateStockAsync(CreateStockRequest request);
+    Task<Result<StockResponse>> UpdateStockQuantityAsync(string productId, UpdateStockRequest request);
+    Task<Result<bool>> HasAvailableStockAsync(string productId, int quantity);
+    Task<Result<StockReservationResponse>> ReserveStocksAsync(IEnumerable<ReservationItem> reservationItems);
 }

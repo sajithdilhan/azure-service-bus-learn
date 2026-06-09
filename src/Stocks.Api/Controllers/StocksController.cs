@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Shared.Mapping;
 using Shared.Requests;
-using Shared.Responses;
 using Stocks.Api.Interfaces;
 
 namespace Stocks.Api.Controllers;
@@ -14,8 +12,13 @@ public class StocksController(IStocksService stocksService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetStocks()
     {
-        var stocks = await stocksService.GetStocksAsync();
-        return Ok(stocks.Select(stock => stock.ToResponse()));
+        var result = await stocksService.GetStocksAsync();
+        if (!result.IsSuccess)
+        {
+            return StatusCode(result.Error?.Code ?? StatusCodes.Status404NotFound, result.Error);
+        }
+
+        return Ok(result);
     }
 
     [HttpGet("{productId}")]
@@ -23,13 +26,13 @@ public class StocksController(IStocksService stocksService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetStockByProductId(string productId)
     {
-        var stock = await stocksService.GetStockByProductIdAsync(productId);
-        if (stock == null)
+        var result = await stocksService.GetStockByProductIdAsync(productId);
+        if (!result.IsSuccess)
         {
-            return NotFound();
+            return StatusCode(result.Error?.Code ?? StatusCodes.Status404NotFound, result.Error);
         }
 
-        return Ok(stock.ToResponse());
+        return Ok(result);
     }
 
     [HttpPost]
@@ -42,8 +45,13 @@ public class StocksController(IStocksService stocksService) : ControllerBase
             return BadRequest("Product id is required.");
         }
 
-        var stock = await stocksService.CreateStockAsync(request);
-        return CreatedAtAction(nameof(GetStockByProductId), new { productId = stock.ProductId }, stock.ToResponse());
+        var result = await stocksService.CreateStockAsync(request);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(result.Error);
+        }
+
+        return CreatedAtAction(nameof(GetStockByProductId), new { productId = result.Value?.ProductId }, result.Value);
     }
 
     [HttpPut("{productId}/quantity")]
@@ -51,13 +59,13 @@ public class StocksController(IStocksService stocksService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateStockQuantity(string productId, UpdateStockRequest request)
     {
-        var stock = await stocksService.UpdateStockQuantityAsync(productId, request);
-        if (stock == null)
+        var result = await stocksService.UpdateStockQuantityAsync(productId, request);
+        if (!result.IsSuccess)
         {
-            return NotFound();
+            return StatusCode(result.Error?.Code ?? StatusCodes.Status404NotFound, result.Error);
         }
 
-        return Ok(stock.ToResponse());
+        return Ok(result);
     }
 
     [HttpPost("reservations")]
@@ -77,21 +85,13 @@ public class StocksController(IStocksService stocksService) : ControllerBase
             return BadRequest("Each reservation item requires a product id and a quantity greater than zero.");
         }
 
-        var success = await stocksService.ReserveStocksAsync(items);
+        var result = await stocksService.ReserveStocksAsync(items);
 
-        if (!success)
+        if (!result.IsSuccess)
         {
-            return Conflict(new StockReservationResponse
-            {
-                Success = false,
-                Message = "One or more reservations could not be processed."
-            });
+            return StatusCode(result.Error?.Code ?? StatusCodes.Status409Conflict, result.Error);
         }
 
-        return Ok(new StockReservationResponse
-        {
-            Success = true,
-            Message = "Stocks reserved successfully."
-        });
+        return Ok(result.Value);
     }
 }

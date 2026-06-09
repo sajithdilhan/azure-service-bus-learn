@@ -1,4 +1,3 @@
-﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Payments.Api.Interfaces;
 using Shared.Requests;
@@ -9,18 +8,17 @@ namespace Payments.Api.Controllers;
 [ApiController]
 public class PaymentsController(IPaymentService paymentService) : ControllerBase
 {
-
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> CreatePayment(CreatePaymentRequest request)
     {
         var result = await paymentService.ProcessPaymentAsync(request);
-        if (!result)
+        if (!result.IsSuccess)
         {
-            return BadRequest(new { Message = "Failed to process payment." });
+            return StatusCode(result.Error?.Code ?? StatusCodes.Status400BadRequest, result.Error);
         }
 
-        return Accepted(new { Message = "Payment processed successfully." });
+        return Accepted(result.Value);
     }
 }

@@ -1,24 +1,40 @@
-using Orders.Api.Exceptions;
 using Orders.Api.Interfaces;
+using Shared.Common;
 using Shared.Entities;
-using Shared.Mapping;
+using Shared.Mappings;
 using Shared.Requests;
+using Shared.Responses;
+using System.Net;
 
 namespace Orders.Api.Services;
 
 public sealed class OrderService(IOrderRepository orderRepository, IStocksClient stocksClient, ILogger<OrderService> logger) : IOrderService
 {
-    public async Task<IReadOnlyCollection<Order>> GetOrdersAsync()
+    public async Task<Result<IReadOnlyCollection<OrderResponse>>> GetOrdersAsync()
     {
-        return await orderRepository.GetOrdersAsync();
+        var orders = await orderRepository.GetOrdersAsync();
+
+        if (orders == null || !orders.Any())
+        {
+            logger.LogInformation("No orders found in the database.");
+            return Result<IReadOnlyCollection<OrderResponse>>.Failure(new Error((int)HttpStatusCode.NotFound, "No orders found!"));
+        }
+        return Result<IReadOnlyCollection<OrderResponse>>.Success(orders.Select(order => order.ToResponse()).ToList());
     }
 
-    public async Task<Order?> GetOrderByIdAsync(Guid id)
+    public async Task<Result<OrderResponse>> GetOrderByIdAsync(Guid id)
     {
-        return await orderRepository.GetOrderByIdAsync(id);
+        var order = await orderRepository.GetOrderByIdAsync(id);
+        if (order == null)
+        {
+            logger.LogInformation("Order not found with ID: {OrderId}", id);
+            return Result<OrderResponse>.Failure(new Error((int)HttpStatusCode.NotFound, "Order not found!"));
+        }
+
+        return Result<OrderResponse>.Success(order.ToResponse());
     }
 
-    public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
+    public async Task<Result<OrderResponse>> CreateOrderAsync(CreateOrderRequest request)
     {
         var reservationItems = request.OrderLines.Select(line => new ReservationItem
         {
@@ -31,23 +47,21 @@ public sealed class OrderService(IOrderRepository orderRepository, IStocksClient
         {
             logger.LogError("Failed to reserve stocks for order creation. Customer: {CustomerId}, OrderLines: {OrderLines}",
                 request.CustomerId, string.Join(", ", request.OrderLines.Select(line => $"ProductId: {line.ProductId}, Quantity: {line.Quantity}")));
-            throw new StockReservationFailedException();
+            return Result<OrderResponse>.Failure(new Error((int)HttpStatusCode.BadRequest, "Failed to reserve stocks for the order!"));
         }
 
-        return await orderRepository.CreateOrderAsync(request.ToEntity());
+        var order = await orderRepository.CreateOrderAsync(request.ToEntity());
+        return Result<OrderResponse>.Success(order.ToResponse());
     }
 
-    public async Task UpdateOrderAsync(Order order)
+    public async Task<Result<bool>> UpdateOrderAsync(Order order)
     {
-        try
+        var result = await orderRepository.UpdateOrderAsync(order);
+        if (!result)
         {
-            await orderRepository.UpdateOrderAsync(order);
+            logger.LogError("Failed to update order with ID: {OrderId}", order.Id);
+            return Result<bool>.Failure(new Error((int)HttpStatusCode.InternalServerError, "Failed to update order!"));
         }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "An error occurred while updating the order.");
-            throw;
-        }
-
+        return Result<bool>.Success(result);
     }
 }

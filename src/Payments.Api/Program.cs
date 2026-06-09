@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Payments.Api.Data;
 using Payments.Api.Interfaces;
+using Payments.Api.Middlewares;
 using Payments.Api.Repositories;
 using Payments.Api.Services;
 using Scalar.AspNetCore;
@@ -23,6 +24,9 @@ builder.AddAzureServiceBusClient("messaging");
 builder.Services.AddDbContext<PaymentsDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<LoggingMiddleware>();
 
 app.MapDefaultEndpoints();
 

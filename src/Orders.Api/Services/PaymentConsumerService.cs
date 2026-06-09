@@ -1,6 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Orders.Api.Interfaces;
 using Shared.Enums;
+using Shared.Mappings;
 using Shared.MessagingContracts;
 using System.Text.Json;
 
@@ -35,10 +36,10 @@ public class PaymentConsumerService(
             {
                 var orderService = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IOrderService>();
                 var order = await orderService.GetOrderByIdAsync(createPaymentMessage.OrderId);
-                if (order is not null)
+                if (order is { IsSuccess: true , Value: not null })
                 {
-                    order.Status = OrderStatus.Confirmed;
-                    await orderService.UpdateOrderAsync(order);
+                    order.Value.Status = OrderStatus.Confirmed;
+                    await orderService.UpdateOrderAsync(order.Value.ToEntity());
                     logger.LogInformation("Order {OrderId} status updated to Confirmed.", createPaymentMessage.OrderId);
                 }
                 else

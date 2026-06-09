@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Stocks.Api.Data;
 using Stocks.Api.Interfaces;
+using Stocks.Api.Middlewares;
 using Stocks.Api.Repositories;
 using Stocks.Api.Services;
 using System.Text.Json.Serialization;
@@ -24,6 +25,9 @@ builder.Services.AddScoped<IStocksService, StocksService>();
 builder.Services.AddDbContext<StocksDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<LoggingMiddleware>();
 
 app.MapDefaultEndpoints();
 

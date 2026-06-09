@@ -1,7 +1,7 @@
 using Shared.Entities;
 using Shared.Responses;
 
-namespace Shared.Mapping;
+namespace Shared.Mappings;
 
 public static class ResponseMappings
 {
@@ -49,6 +49,23 @@ public static class ResponseMappings
             LastRestockedAt = stock.LastRestockedAt,
             CreatedAt = stock.CreatedAt,
             UpdatedAt = stock.UpdatedAt
+        };
+    }
+
+    public static PaymentResponse ToResponse(this Payment payment)
+    {
+        return new PaymentResponse
+        {
+            Id = payment.Id,
+            OrderId = payment.OrderId,
+            Amount = payment.Amount,
+            PaymentMethod = payment.PaymentMethod,
+            PaymentDate = payment.PaymentDate,
+            Status = payment.Status,
+            TransactionId = payment.TransactionId,
+            Reference = payment.Reference,
+            CreatedAt = payment.CreatedAt,
+            UpdatedAt = payment.UpdatedAt
         };
     }
 }

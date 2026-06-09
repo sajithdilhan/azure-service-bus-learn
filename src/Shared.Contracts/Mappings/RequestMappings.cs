@@ -1,8 +1,9 @@
 ﻿using Shared.Entities;
 using Shared.Enums;
 using Shared.Requests;
+using Shared.Responses;
 
-namespace Shared.Mapping;
+namespace Shared.Mappings;
 
 public static class RequestMappings
 {
@@ -21,6 +22,21 @@ public static class RequestMappings
         return order;
     }
 
+    public static Order ToEntity(this OrderResponse response)
+    {
+        var order = new Order
+        {
+            CustomerId = response.CustomerId,
+            CustomerName = response.CustomerName,
+            CustomerPhone = response.CustomerPhone,
+            CustomerEmail = response.CustomerEmail,
+            ShippingAddress = response.ShippingAddress,
+            Status = OrderStatus.Pending,
+            OrderLines = response.OrderLines.Select(line => line.ToEntity()).ToList()
+        };
+        return order;
+    }
+
     public static OrderLine ToEntity(this CreateOrderLineRequest request)
     {
         return new OrderLine
@@ -29,6 +45,17 @@ public static class RequestMappings
             Quantity = request.Quantity,
             ProductName = request.ProductName,
             Price = request.Price
+        };
+    }
+
+    public static OrderLine ToEntity(this OrderLineResponse response)
+    {
+        return new OrderLine
+        {
+            ProductId = response.ProductId,
+            Quantity = response.Quantity,
+            ProductName = response.ProductName,
+            Price = response.Price
         };
     }
 
@@ -43,7 +70,7 @@ public static class RequestMappings
         };
     }
 
-   public static Payment ToEntity(this CreatePaymentRequest request)
+    public static Payment ToEntity(this CreatePaymentRequest request)
     {
         return new Payment
         {
@@ -55,5 +82,5 @@ public static class RequestMappings
             Reference = request.Reference
         };
     }
-}  
-      
+}
+

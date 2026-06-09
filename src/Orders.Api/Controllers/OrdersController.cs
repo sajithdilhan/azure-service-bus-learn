@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Orders.Api.Exceptions;
 using Orders.Api.Interfaces;
-using Shared.Mapping;
 using Shared.Requests;
 
 namespace Orders.Api.Controllers;
@@ -14,8 +12,12 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> GetOrders()
     {
-        var orders = await orderService.GetOrdersAsync();
-        return Ok(orders.Select(order => order.ToResponse()));
+        var result = await orderService.GetOrdersAsync();
+        if (!result.IsSuccess)
+        {
+            return NotFound();
+        }
+        return Ok(result);
     }
 
     [HttpGet("{id:guid}")]
@@ -23,13 +25,12 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetOrderById(Guid id)
     {
-        var order = await orderService.GetOrderByIdAsync(id);
-        if (order == null)
+        var result = await orderService.GetOrderByIdAsync(id);
+        if (!result.IsSuccess)
         {
             return NotFound();
         }
-
-        return Ok(order.ToResponse());
+        return Ok(result);
     }
 
     [HttpPost]
@@ -42,14 +43,11 @@ public class OrdersController(IOrderService orderService) : ControllerBase
             return BadRequest("At least one order line is required.");
         }
 
-        try
+        var order = await orderService.CreateOrderAsync(request);
+        if (!order.IsSuccess)
         {
-            var order = await orderService.CreateOrderAsync(request);
-            return CreatedAtAction(nameof(GetOrderById), new { id = order.Id }, order.ToResponse());
+            return BadRequest(order.Error);
         }
-        catch (StockReservationFailedException exception)
-        {
-            return Conflict(exception.Message);
-        }
+        return CreatedAtAction(nameof(GetOrderById), new { id = order.Value?.Id }, order.Value);
     }
 }

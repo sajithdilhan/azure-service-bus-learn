@@ -34,7 +34,7 @@ public sealed class OrderRepository(OrderDbContext database) : IOrderRepository
         return order;
     }
 
-    public async Task UpdateOrderAsync(Order order)
+    public async Task<bool> UpdateOrderAsync(Order order)
     {
         if (!await database.Orders.AnyAsync(o => o.Id == order.Id))
         {
@@ -43,5 +43,6 @@ public sealed class OrderRepository(OrderDbContext database) : IOrderRepository
         order.UpdatedAt = DateTime.UtcNow;
         database.Orders.Update(order);
         await database.SaveChangesAsync();
+        return true;
     }
 }

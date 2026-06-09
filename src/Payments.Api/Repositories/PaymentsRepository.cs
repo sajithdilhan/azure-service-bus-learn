@@ -7,11 +7,16 @@ namespace Payments.Api.Repositories;
 
 public class PaymentsRepository(PaymentsDbContext dbContext) : IPaymentRepository
 {
-    public async Task<bool> CreatePaymentAsync(Payment payment)
+    public async Task<Payment> CreatePaymentAsync(Payment payment)
     {
+        payment.CreatedAt = DateTime.UtcNow;
+        payment.UpdatedAt = payment.CreatedAt;
+        payment.PaymentDate = payment.CreatedAt;
+
         await dbContext.Payments.AddAsync(payment);
         await dbContext.SaveChangesAsync();
-        return true;
+
+        return payment;
     }
     public async Task<IReadOnlyCollection<Payment>> GetAllPaymentAsync()
     {

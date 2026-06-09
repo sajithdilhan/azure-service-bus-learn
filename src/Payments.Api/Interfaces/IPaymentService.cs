@@ -1,8 +1,10 @@
-﻿using Shared.Requests;
+using Shared.Common;
+using Shared.Requests;
+using Shared.Responses;
 
 namespace Payments.Api.Interfaces;
 
 public interface IPaymentService
 {
-    Task<bool> ProcessPaymentAsync(CreatePaymentRequest request);
+    Task<Result<PaymentResponse>> ProcessPaymentAsync(CreatePaymentRequest request);
 }
