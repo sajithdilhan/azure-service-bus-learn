@@ -1,7 +1,6 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Orders.Api.Interfaces;
 using Shared.Enums;
-using Shared.Mappings;
 using Shared.MessagingContracts;
 using System.Text.Json;
 
@@ -25,7 +24,7 @@ public class PaymentConsumerService(
 
             var createPaymentMessage = JsonSerializer.Deserialize<CreatePaymentMessage>(body);
 
-            if(createPaymentMessage is null)
+            if (createPaymentMessage is null)
             {
                 logger.LogWarning("Received null message.");
                 await args.CompleteMessageAsync(args.Message);
@@ -34,18 +33,10 @@ public class PaymentConsumerService(
 
             if (createPaymentMessage.Status == PaymentStatus.Confirmed)
             {
-                var orderService = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IOrderService>();
-                var order = await orderService.GetOrderByIdAsync(createPaymentMessage.OrderId);
-                if (order is { IsSuccess: true , Value: not null })
-                {
-                    order.Value.Status = OrderStatus.Confirmed;
-                    await orderService.UpdateOrderAsync(order.Value.ToEntity());
-                    logger.LogInformation("Order {OrderId} status updated to Confirmed.", createPaymentMessage.OrderId);
-                }
-                else
-                {
-                    logger.LogWarning("Order {OrderId} not found.", createPaymentMessage.OrderId);
-                }
+                var orderRepository = serviceScopeFactory.CreateScope().ServiceProvider.GetRequiredService<IOrderRepository>();
+
+                await orderRepository.UpdateOrderStatusAsync(createPaymentMessage.OrderId, OrderStatus.Confirmed);
+                logger.LogInformation("Order {OrderId} status updated to Confirmed.", createPaymentMessage.OrderId);
             }
 
             await args.CompleteMessageAsync(args.Message);

@@ -17,7 +17,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
         {
             return NotFound();
         }
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [HttpGet("{id:guid}")]
@@ -30,7 +30,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
         {
             return NotFound();
         }
-        return Ok(result);
+        return Ok(result.Value);
     }
 
     [HttpPost]

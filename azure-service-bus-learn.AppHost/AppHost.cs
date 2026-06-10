@@ -1,12 +1,12 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-var stocksApi = builder.AddProject<Projects.Stocks_Api>("stocks-api");
+
 
 var serviceBus = builder.AddAzureServiceBus("messaging")
     .RunAsEmulator(emulator =>
     {
         emulator
-            .WithHostPort(7777)
+            .WithHostPort(56720)
             .WithConfiguration(config =>
             {
                 config["UserConfig"]!["Namespaces"]![0]!["Name"] = "sbemulatorns";
@@ -14,10 +14,13 @@ var serviceBus = builder.AddAzureServiceBus("messaging")
     });
 
 serviceBus.AddServiceBusQueue("payments-queue");
+var cache = builder.AddRedis("cache").WithRedisCommander();
 
+var stocksApi = builder.AddProject<Projects.Stocks_Api>("stocks-api");
 builder.AddProject<Projects.Orders_Api>("orders-api")
     .WithReference(stocksApi)
     .WithReference(serviceBus)
+    .WithReference(cache)
     .WaitFor(stocksApi)
     .WaitFor(serviceBus)
     .WithEnvironment("Services__StocksApi__BaseAddress", "https+http://stocks-api");

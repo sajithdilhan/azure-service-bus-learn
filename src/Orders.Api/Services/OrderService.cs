@@ -1,14 +1,19 @@
+using Microsoft.Extensions.Caching.Distributed;
 using Orders.Api.Interfaces;
 using Shared.Common;
-using Shared.Entities;
 using Shared.Mappings;
 using Shared.Requests;
 using Shared.Responses;
+using StackExchange.Redis;
 using System.Net;
+using System.Text.Json;
 
 namespace Orders.Api.Services;
 
-public sealed class OrderService(IOrderRepository orderRepository, IStocksClient stocksClient, ILogger<OrderService> logger) : IOrderService
+public sealed class OrderService(IOrderRepository orderRepository,
+    IStocksClient stocksClient,
+    ILogger<OrderService> logger,
+    IConnectionMultiplexer connectionMultiplexer) : IOrderService
 {
     public async Task<Result<IReadOnlyCollection<OrderResponse>>> GetOrdersAsync()
     {
@@ -24,13 +29,27 @@ public sealed class OrderService(IOrderRepository orderRepository, IStocksClient
 
     public async Task<Result<OrderResponse>> GetOrderByIdAsync(Guid id)
     {
+
+        var cacheKey = $"order:{id}";
+        var db = connectionMultiplexer.GetDatabase();
+        var cachedOrder = await db.StringGetAsync(cacheKey);
+
+        if (cachedOrder.HasValue)
+        {
+            logger.LogInformation("Order found in cache with ID: {OrderId}", id);
+            var orderResponse = JsonSerializer.Deserialize<OrderResponse>(cachedOrder.ToString());
+            return Result<OrderResponse>.Success(orderResponse);
+        }
+
         var order = await orderRepository.GetOrderByIdAsync(id);
+
         if (order == null)
         {
             logger.LogInformation("Order not found with ID: {OrderId}", id);
             return Result<OrderResponse>.Failure(new Error((int)HttpStatusCode.NotFound, "Order not found!"));
         }
 
+        db.StringSet(cacheKey, JsonSerializer.Serialize(order.ToResponse()), TimeSpan.FromMinutes(10));
         return Result<OrderResponse>.Success(order.ToResponse());
     }
 
@@ -54,7 +73,7 @@ public sealed class OrderService(IOrderRepository orderRepository, IStocksClient
         return Result<OrderResponse>.Success(order.ToResponse());
     }
 
-    public async Task<Result<bool>> UpdateOrderAsync(Order order)
+    public async Task<Result<bool>> UpdateOrderAsync(Shared.Entities.Order order)
     {
         var result = await orderRepository.UpdateOrderAsync(order);
         if (!result)
