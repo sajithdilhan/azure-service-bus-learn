@@ -6,7 +6,7 @@ using System.Text.Json;
 
 namespace Orders.Api.Services;
 
-public class PaymentConsumerService(
+internal class PaymentConsumerService(
     ILogger<PaymentConsumerService> logger,
     ServiceBusClient serviceBusClient,
     IServiceScopeFactory serviceScopeFactory,
@@ -49,19 +49,15 @@ public class PaymentConsumerService(
         };
 
         await paymentProcessor.StartProcessingAsync(stoppingToken);
-        logger.LogInformation("Payment consumer started for queue {QueueName}.", queueName);
 
         try
         {
-            await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
+            await Task.Delay(Timeout.Infinite, stoppingToken);
         }
-        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        catch (OperationCanceledException)
         {
-            logger.LogInformation("Payment consumer is stopping.");
-        }
-        finally
-        {
-            await paymentProcessor.StopProcessingAsync(CancellationToken.None);
+            logger.LogInformation("PaymentConsumerService is stopping.");
+            await paymentProcessor.StopProcessingAsync();
         }
     }
 }

@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Caching.Distributed;
 using Orders.Api.Interfaces;
 using Shared.Common;
 using Shared.Mappings;
@@ -10,7 +9,7 @@ using System.Text.Json;
 
 namespace Orders.Api.Services;
 
-public sealed class OrderService(IOrderRepository orderRepository,
+internal sealed class OrderService(IOrderRepository orderRepository,
     IStocksClient stocksClient,
     ILogger<OrderService> logger,
     IConnectionMultiplexer connectionMultiplexer) : IOrderService
@@ -38,6 +37,11 @@ public sealed class OrderService(IOrderRepository orderRepository,
         {
             logger.LogInformation("Order found in cache with ID: {OrderId}", id);
             var orderResponse = JsonSerializer.Deserialize<OrderResponse>(cachedOrder.ToString());
+            if (orderResponse == null)
+            {
+                logger.LogError("Failed to deserialize cached order with ID: {OrderId}", id);
+                return Result<OrderResponse>.Failure(new Error((int)HttpStatusCode.InternalServerError, "Failed to retrieve order from cache!"));
+            }
             return Result<OrderResponse>.Success(orderResponse);
         }
 

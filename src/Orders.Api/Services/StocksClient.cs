@@ -1,11 +1,10 @@
-using System.Net;
-using System.Net.Http.Json;
 using Orders.Api.Interfaces;
 using Shared.Requests;
+using System.Net;
 
 namespace Orders.Api.Services;
 
-public sealed class StocksClient(HttpClient httpClient) : IStocksClient
+internal sealed class StocksClient(HttpClient httpClient) : IStocksClient
 {
     public async Task<bool> ReserveStocksAsync(
         IEnumerable<ReservationItem> reservationItems,
