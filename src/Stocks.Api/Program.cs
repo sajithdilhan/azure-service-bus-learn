@@ -22,7 +22,8 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddScoped<IStocksRepository, StocksRepository>();
 builder.Services.AddScoped<IStocksService, StocksService>();
-builder.Services.AddDbContext<StocksDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<StocksDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"), 
+    npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "stocks")));
 
 var app = builder.Build();
 

@@ -15,6 +15,7 @@ public sealed class Order : BaseEntity
     public string CustomerEmail { get; set; } = string.Empty;
     public string ShippingAddress { get; set; } = string.Empty;
     public OrderStatus Status { get; set; }
+    public DateTime OrderDate { get; set; } = DateTime.UtcNow;
 
     public Order()
     {

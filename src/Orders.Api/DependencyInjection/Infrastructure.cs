@@ -9,7 +9,8 @@ public static class Infrastructure
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddDbContext<OrderDbContext>(options => options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
+        services.AddDbContext<OrderDbContext>(options => options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"),
+            npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "orders")));
 
         services.AddHttpClient<IStocksClient, StocksClient>(client =>
         {

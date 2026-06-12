@@ -24,7 +24,9 @@ builder.Services.AddScoped<IPaymentRepository, PaymentsRepository>();
 
 builder.AddAzureServiceBusClient("messaging");
 
-builder.Services.AddDbContext<PaymentsDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddDbContext<PaymentsDbContext>(options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
+    npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", "payments")));
+
 builder.Services.AddScoped<IValidator<CreatePaymentRequest>, PaymentValidator>();
 
 var app = builder.Build();
