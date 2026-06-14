@@ -22,11 +22,11 @@ builder.AddProject<Projects.Orders_Api>("orders-api")
     .WithReference(serviceBus)
     .WithReference(cache)
     .WaitFor(stocksApi)
-    .WaitFor(serviceBus)
+    //.WaitFor(serviceBus)
     .WithEnvironment("Services__StocksApi__BaseAddress", "https+http://stocks-api");
 
 builder.AddProject<Projects.Payments_Api>("payments-api")
-    .WithReference(serviceBus)
-    .WaitFor(serviceBus);
+    .WithReference(serviceBus);
+    //.WaitFor(serviceBus);
 
 builder.Build().Run();

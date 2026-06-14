@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.Common;
 using Shared.Requests;
 using Stocks.Api.Interfaces;
 
@@ -72,6 +74,7 @@ public class StocksController(IStocksService stocksService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
+    [Authorize(AuthenticationSchemes = Constants.ApiKeyAuthenticationScheme)]
     public async Task<IActionResult> Reservations(IEnumerable<ReservationItem> reservationItems)
     {
         var items = reservationItems?.ToList();

@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Orders.Api.Interfaces;
+using Shared.Common;
 using Shared.Requests;
 
 namespace Orders.Api.Controllers;
@@ -10,6 +12,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [Authorize(Policy = Constants.AdminPolicy)]
     public async Task<IActionResult> GetOrders()
     {
         var result = await orderService.GetOrdersAsync();
@@ -23,6 +26,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     [HttpGet("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [Authorize(Policy = Constants.AdminOrUserPolicy)]
     public async Task<IActionResult> GetOrderById(Guid id)
     {
         var result = await orderService.GetOrderByIdAsync(id);
@@ -36,6 +40,7 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [Authorize(Policy = Constants.UserPolicy)]
     public async Task<IActionResult> CreateOrder(CreateOrderRequest request)
     {
         if (request.OrderLines.Count == 0)
