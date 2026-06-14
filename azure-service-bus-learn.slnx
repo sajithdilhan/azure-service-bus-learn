@@ -7,6 +7,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Orders.Api.Tests/Orders.Api.Tests.csproj" />
+    <Project Path="tests/Payments.Api.Tests/Payments.Api.Tests.csproj" Id="f8972168-1873-45bf-95b6-d8686f8b9b6e" />
     <Project Path="tests/Stocks.Api.Tests/Stocks.Api.Tests.csproj" />
   </Folder>
   <Project Path="azure-service-bus-learn.AppHost/azure-service-bus-learn.AppHost.csproj" />

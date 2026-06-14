@@ -41,9 +41,9 @@ public class OrdersController(IOrderService orderService) : ControllerBase
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [Authorize(Policy = Constants.UserPolicy)]
-    public async Task<IActionResult> CreateOrder(CreateOrderRequest request)
+    public async Task<IActionResult> CreateOrder(CreateOrderRequest? request)
     {
-        if (request.OrderLines.Count == 0)
+        if (request?.OrderLines == null || request.OrderLines.Count == 0)
         {
             return BadRequest("At least one order line is required.");
         }
